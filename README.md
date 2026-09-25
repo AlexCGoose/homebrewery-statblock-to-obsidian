@@ -1,92 +1,62 @@
-# Obsidian Sample Plugin
+# Homebrewery Statblock
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Renders Homebrewery-style D&D stat block markdown — the `{{monster,frame,wide ... }}` curly-brace syntax — directly inside an Obsidian note, unmodified from what you'd paste into [Homebrewery](https://homebrewery.naturalcrit.com/).
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Usage
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+Wrap your Homebrewery block in a fenced code block tagged `homebrewery-statblock`:
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and outputs a Notice on click.
-- Registers a global interval which logs 'setInterval' to the console.
+````markdown
+```homebrewery-statblock
+{{monster,frame,wide
 
-## First time developing plugins?
+## Raijū, Raging Bolt
 
-Quick starting guide for new plugin devs:
+*Huge Elemental (Air), Chaotic Neutral*
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `src/main.ts` to `main.js`.
-- Make changes to `src/main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+{{stats
+...
+}}
 
-## Releasing new releases
+### Traits
+...
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
-
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
-
-## Adding your plugin to the community plugin list
-
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `npm i` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint
-
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
+}}
 ```
+````
 
-If you have multiple URLs, you can also do:
+Nothing about the content inside the fence needs to change from what you'd paste into Homebrewery's own editor — the plugin parses the `{{ }}` divs, `\column` breaks, `Label :: value` prop lines, and GFM tables itself.
 
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
-```
+## What's implemented
 
-## API Documentation
+- **`src/parser.ts`** — a small recursive-descent parser for the curly-brace   grammar. Tracks `{{`/`}}` depth so blocks nest correctly (e.g. `{{stats {{vitals ... }} {{tables ... }} }}`), then splits the text inside each div into headings, paragraphs, `Label :: value` prop rows, GFM tables, and `\column` breaks.
+- **`src/renderer.ts`** — walks that tree and builds real DOM nodes with Obsidian's `createDiv`/`createEl`/`createSpan`/`appendText` helpers (no `innerHTML`, so nothing in the source can inject markup). Class names from the source are kept but prefixed with `hb-` (`stats` → `.hb-stats`) to avoid colliding with Obsidian's or a theme's own CSS.
+- **`src/main.ts`** — registers the `homebrewery-statblock` code block processor. Parse errors (e.g. an unclosed `{{`) render as an inline error box instead of failing silently.
+- **`styles.css`** — a plain, readable layout using Obsidian's theme CSS variables (adapts to light/dark automatically). Not a pixel copy of any particular Homebrewery CSS theme — restyle freely, nothing in the TS depends on the visual values here, only on the class names existing.
 
-See https://docs.obsidian.md
+### The "wide" two-column layout
+
+Homebrewery's wide monster blocks show the name/vitals/ability tables at full width, then flow Traits/Actions/Reactions into two columns. That split isn't marked explicitly in the source — it falls out of wherever the `{{stats}}` div happens to close relative to the first `###` heading. The renderer approximates it generically: for any div classed `wide`, everything before its first level-3-or-deeper heading stays full width (`.hb-header`), everything from that heading on gets `columns: 2` (`.hb-body`), and `\column` forces a break wherever it appears. This was built and tested against a real Homebrewery-exported monster block — if your other statblocks structure things differently, this is the function to adjust: `renderWideSplit()` in `src/renderer.ts`.
+
+### Not handled (yet)
+
+The grammar here is scoped to what stat blocks actually use — no lists, links, code spans, or blockquotes. If a block you paste in uses one of those, it'll fall through to plain paragraph text. Extend `parseTextBlocks()` in `src/parser.ts` and the `INLINE_RE` regex in `src/renderer.ts` if you need more of Homebrewery's grammar.
+
+## Try it
+
+Copy `test-note.md` into your vault with the plugin enabled — it's your Raijū block wrapped in the fence above, and doubles as a regression fixture: the parser and renderer were both tested against it (a plain-Node harness outside Obsidian, dumping the resulting DOM tree) before this was written up.
+
+## Development
+
+This started from the standard [obsidian-sample-plugin](https://github.com/obsidianmd/obsidian-sample-plugin) template, so the usual workflow applies unchanged:
+
+- `npm i`
+- `npm run dev` to compile `src/main.ts` → `main.js` in watch mode
+- Copy `main.js`, `styles.css`, `manifest.json` into `VaultFolder/.obsidian/plugins/homebrewery-statblock/` (or symlink the repo there) and enable the plugin in Obsidian's settings
+
+No changes were needed to `esbuild.config.mjs`, `tsconfig.json`, or `package.json` — the template already bundles `src/main.ts`. The sample plugin's ribbon icon, settings tab, and modal were removed from `main.ts` since this plugin doesn't need them.
+
+## TODO
+
+- Fix spacing between the end of a paragraph and the next heading (e.g. the gap between the last trait and the 'Actions' heading)
+- Fix immunities appearing on a second line

@@ -1,8 +1,125 @@
-/*
+/* Homebrewery Statblock — base render styles.
+   Class names mirror the class names from the source markdown (e.g. the
+   source's `stats` becomes `.hb-stats`), each prefixed with "hb-" so they
+   can't collide with Obsidian's or a theme's own CSS classes.
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+   This is deliberately a plain, theme-aware readable layout rather than a
+   pixel copy of any particular Homebrewery theme — colors come from
+   Obsidian's CSS variables so it adapts to light/dark themes automatically.
+   Tweak freely; nothing in main.ts/parser.ts/renderer.ts depends on the
+   values here, only on the class names being present. */
 
-If your plugin does not need CSS, delete this file.
+.hb-statblock-root {
+	margin: 0.5em 0;
+}
 
-*/
+.hb-statblock-error {
+	color: var(--text-error);
+	border: 1px solid var(--text-error);
+	border-radius: 4px;
+	padding: 0.5em 0.75em;
+}
+.hb-statblock-error pre {
+	white-space: pre-wrap;
+	margin: 0.4em 0 0 0;
+	font-family: var(--font-monospace);
+}
+
+.hb-monster {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 1em 1.25em;
+	color: var(--text-normal);
+	line-height: 1.35;
+}
+
+.hb-monster h2 {
+	margin: 0 0 0.15em 0;
+	font-size: 1.5em;
+	color: var(--text-accent);
+	border-bottom: 2px solid var(--text-accent);
+	padding-bottom: 0.15em;
+}
+
+.hb-monster h3 {
+	color: var(--text-accent);
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin: 0.7em 0 0.3em 0;
+	padding-bottom: 0.1em;
+	font-size: 1.1em;
+}
+
+.hb-header > p:first-of-type {
+	font-style: italic;
+	margin: 0 0 0.6em 0;
+}
+
+.hb-monster p {
+	margin: 0 0 0.5em 0;
+}
+
+/* "**Label**      :: value" stat rows (AC, HP, Skills, CR, ...) */
+.hb-prop {
+	display: flex;
+	gap: 0.4em;
+	margin: 0 0 0.15em 0;
+	flex-wrap: wrap;
+}
+.hb-prop-label strong {
+	color: var(--text-accent);
+}
+.hb-prop-value {
+	flex: 1 1 auto;
+}
+
+.hb-vitals {
+	columns: 2;
+	column-gap: 1.5em;
+	margin: 0.5em 0;
+}
+
+.hb-tables {
+	columns: 3;
+	column-gap: 0.75em;
+	column-fill: balance;
+	margin: 0.6em 0;
+}
+.hb-tables table {
+	break-inside: avoid;
+	margin: 0 0 0.5em 0;
+	font-size: 0.85em;
+}
+
+.hb-monster table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.hb-monster th,
+.hb-monster td {
+	border: 1px solid var(--background-modifier-border);
+	padding: 0.15em 0.4em;
+	text-align: center;
+}
+.hb-monster thead {
+	background: var(--background-modifier-hover);
+}
+.hb-monster tbody tr:nth-child(odd) {
+	background: var(--background-primary-alt);
+}
+
+/* Two-column flow for "wide" monster blocks — everything from the first
+   ### heading onward, split out by renderWideSplit() in renderer.ts. */
+.hb-body {
+	columns: 2;
+	column-gap: 1.75em;
+}
+.hb-body h3:first-child {
+	margin-top: 0;
+}
+
+.hb-col-break {
+	break-after: column;
+	height: 0;
+	margin: 0;
+}

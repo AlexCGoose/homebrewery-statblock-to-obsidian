@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"id": "homebrewery-statblock",
+	"name": "Homebrewery Statblock",
+	"version": "0.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "Render Homebrewery-style D&D stat block markdown (the {{monster,frame,wide}} curly-brace syntax) directly inside Obsidian notes, unmodified from what you'd paste into Homebrewery.",
+	"author": "AlexCGoose",
+	"authorUrl": "",
 	"isDesktopOnly": false
 }
