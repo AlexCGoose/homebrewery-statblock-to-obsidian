@@ -45,7 +45,7 @@
 .hb-monster h3 {
 	color: var(--text-accent);
 	border-bottom: 1px solid var(--background-modifier-border);
-	margin: 0.7em 0 0.3em 0;
+	margin: 0.25em 0 0.3em 0;
 	padding-bottom: 0.1em;
 	font-size: 1.1em;
 }
@@ -59,18 +59,23 @@
 	margin: 0 0 0.5em 0;
 }
 
-/* "**Label**      :: value" stat rows (AC, HP, Skills, CR, ...) */
+/* "**Label**      :: value" stat rows (AC, HP, Skills, CR, ...).
+   A hanging indent, not flexbox: with flex + flex-wrap, a long value (e.g.
+   Immunities' list) could wrap onto its own line separate from the label
+   once the column got narrow. Here label and value are just inline content
+   in one block, so they wrap together like normal text; text-indent pulls
+   the first line (label) back out to the left edge, and padding-left
+   indents any wrapped continuation lines to match. */
 .hb-prop {
-	display: flex;
-	gap: 0.4em;
 	margin: 0 0 0.15em 0;
-	flex-wrap: wrap;
+	padding-left: 1.3em;
+	text-indent: -1.3em;
+}
+.hb-prop-label {
+	margin-right: 0.35em;
 }
 .hb-prop-label strong {
 	color: var(--text-accent);
-}
-.hb-prop-value {
-	flex: 1 1 auto;
 }
 
 .hb-vitals {
@@ -116,10 +121,4 @@
 }
 .hb-body h3:first-child {
 	margin-top: 0;
-}
-
-.hb-col-break {
-	break-after: column;
-	height: 0;
-	margin: 0;
 }

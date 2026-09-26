@@ -70,8 +70,9 @@ function renderBlock(block: Block, container: HTMLElement): void {
  * falls out of where the author's {{stats}} div happens to close relative
  * to the first `###` heading. We approximate it generically: everything
  * before the first level-3-or-deeper heading in a "wide" div's direct
- * children stays full width; everything from that heading onward flows in
- * two CSS columns (broken further by \column markers).
+ * children stays full width; everything from that heading onward flows into
+ * two CSS columns, which the browser balances automatically — no manual
+ * break needed (the parser drops \column entirely; see parser.ts).
  */
 function renderWideSplit(children: Block[], container: HTMLElement): void {
 	const splitIndex = children.findIndex((b) => b.type === "heading" && b.level >= 3);
