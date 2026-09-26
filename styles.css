@@ -7,7 +7,15 @@
    pixel copy of any particular Homebrewery theme — colors come from
    Obsidian's CSS variables so it adapts to light/dark themes automatically.
    Tweak freely; nothing in main.ts/parser.ts/renderer.ts depends on the
-   values here, only on the class names being present. */
+   values here, only on the class names being present.
+
+   Why the !important on margins/padding below: Obsidian's own base theme
+   styles bare h1–h6/p/table/th/td elements anywhere inside the rendered
+   note view (not just headings Obsidian itself parsed), with selectors like
+   `.markdown-rendered h3`. Since we render real <h3>/<p>/<table> tags, that
+   rule and ours end up at identical specificity (one class + one element),
+   and cascade order — not anything wrong with the value itself — decides
+   the tie. !important sidesteps that fight instead of hoping to win it. */
 
 .hb-statblock-root {
 	margin: 0.5em 0;
@@ -35,7 +43,7 @@
 }
 
 .hb-monster h2 {
-	margin: 0 0 0.15em 0;
+	margin: 0 0 0.15em 0 !important;
 	font-size: 1.5em;
 	color: var(--text-accent);
 	border-bottom: 2px solid var(--text-accent);
@@ -45,18 +53,18 @@
 .hb-monster h3 {
 	color: var(--text-accent);
 	border-bottom: 1px solid var(--background-modifier-border);
-	margin: 0.25em 0 0.3em 0;
+	margin: 0.25em 0 0.3em 0 !important;
 	padding-bottom: 0.1em;
 	font-size: 1.1em;
 }
 
 .hb-header > p:first-of-type {
 	font-style: italic;
-	margin: 0 0 0.6em 0;
+	margin: 0 0 0.6em 0 !important;
 }
 
 .hb-monster p {
-	margin: 0 0 0.5em 0;
+	margin: 0 0 0.5em 0 !important;
 }
 
 /* "**Label**      :: value" stat rows (AC, HP, Skills, CR, ...).
@@ -92,7 +100,7 @@
 }
 .hb-tables table {
 	break-inside: avoid;
-	margin: 0 0 0.5em 0;
+	margin: 0 0 0.5em 0 !important;
 	font-size: 0.85em;
 }
 
@@ -102,8 +110,8 @@
 }
 .hb-monster th,
 .hb-monster td {
-	border: 1px solid var(--background-modifier-border);
-	padding: 0.15em 0.4em;
+	border: 1px solid var(--background-modifier-border) !important;
+	padding: 0.15em 0.4em !important;
 	text-align: center;
 }
 .hb-monster thead {

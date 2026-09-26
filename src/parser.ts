@@ -159,17 +159,31 @@ function parseTextBlocks(chunk: string): Block[] {
 			continue;
 		}
 
-		const nextLine = (lines[i + 1] ?? "").trim();
-		if (line.startsWith("|") && isTableSeparatorRow(nextLine)) {
+		// GFM table: a "|" row followed (skipping any blank lines) by a valid
+		// separator row. The blank-line tolerance matters in practice: pasting
+		// into Obsidian from many editors inserts a blank line after every
+		// original line (see nextNonBlankIndex's doc comment below), which
+		// would otherwise silently break every table into paragraph text.
+		const sepIdx = nextNonBlankIndex(lines, i + 1);
+		if (line.startsWith("|") && sepIdx < lines.length && isTableSeparatorRow(lines[sepIdx].trim())) {
 			flushParagraph();
-			const tableLines = [line];
-			let j = i + 1;
-			while (j < lines.length && lines[j].trim().startsWith("|")) {
-				tableLines.push(lines[j].trim());
-				j++;
+			const tableLines = [line, lines[sepIdx].trim()];
+			let cursor = nextNonBlankIndex(lines, sepIdx + 1);
+			while (cursor < lines.length && lines[cursor].trim().startsWith("|")) {
+				// If *this* row is itself followed by a separator row, it's not
+				// a continuation of the current table — it's the header of the
+				// next one (e.g. the Str/Int table ends and the Dex/Wis table
+				// begins). Stop here and let the outer loop pick it up fresh.
+				const maybeSepIdx = nextNonBlankIndex(lines, cursor + 1);
+				const startsNextTable =
+					maybeSepIdx < lines.length && isTableSeparatorRow(lines[maybeSepIdx].trim());
+				if (startsNextTable) break;
+
+				tableLines.push(lines[cursor].trim());
+				cursor = nextNonBlankIndex(lines, cursor + 1);
 			}
 			blocks.push(parseTable(tableLines));
-			i = j;
+			i = cursor;
 			continue;
 		}
 
@@ -193,6 +207,19 @@ function parseTextBlocks(chunk: string): Block[] {
 	}
 	flushParagraph();
 	return blocks;
+}
+
+/**
+ * Index of the next line at or after `from` that isn't blank, or
+ * `lines.length` if there isn't one. Used so table detection isn't thrown
+ * off by blank lines pasted in between what were originally adjacent rows —
+ * a common artifact when Obsidian converts pasted HTML to Markdown (see
+ * parseTextBlocks' table-handling comment above).
+ */
+function nextNonBlankIndex(lines: string[], from: number): number {
+	let j = from;
+	while (j < lines.length && lines[j].trim() === "") j++;
+	return j;
 }
 
 /** True for GFM table separator rows like `|:--|:-:|:----:|:----:|`. */
